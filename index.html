@@ -29,7 +29,7 @@ dt{color:var(--mute)}dd{margin:0;font-weight:600;word-break:break-all}
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
 #lb.on{display:flex}#lb img{max-width:100%;max-height:100%;background:#fff;border-radius:8px}
 @media (max-width:480px){.c{grid-template-columns:96px 1fr}.ph{width:96px;height:96px}}
-.pp{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.pp img{width:96px;height:96px;object-fit:cover;border-radius:8px}.sec{margin:10px 0 0;font-weight:700}.note{color:var(--mute);font-size:.88rem;margin:4px 0}#r1,#r2{display:grid;gap:12px}.sb button{white-space:nowrap;min-height:44px}.sb{flex-wrap:wrap}.sb #q{flex:1 1 220px}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.t{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;text-align:left;cursor:pointer;color:inherit;font:inherit}.t img,.t .np{width:100%;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#667;font-size:.75rem}.t b{display:block;font-size:.78rem;word-break:break-all;margin-top:4px}.t span{display:block;font-size:.72rem;color:var(--mute);line-height:1.25;max-height:2.5em;overflow:hidden}.more{margin:12px auto 0;display:block;padding:12px 20px}.more[hidden]{display:none}.cs{margin:6px 0 10px}.dt{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:15;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px}.dt[hidden]{display:none}.dti{background:var(--bg);border-radius:12px;padding:12px;max-width:560px;width:100%;display:grid;gap:10px;margin-top:6vh}</style></head><body>
+.pp{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.pp img{width:96px;height:96px;object-fit:cover;border-radius:8px}.sec{margin:10px 0 0;font-weight:700}.note{color:var(--mute);font-size:.88rem;margin:4px 0}#r1,#r2{display:grid;gap:12px}.sb button{white-space:nowrap;min-height:44px}.sb{flex-wrap:wrap}.sb #q{flex:1 1 220px}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.t{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;text-align:left;cursor:pointer;color:inherit;font:inherit}.t img,.t .np{width:100%;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#667;font-size:.75rem}.t b{display:block;font-size:.78rem;word-break:break-all;margin-top:4px}.t span{display:block;font-size:.72rem;color:var(--mute);line-height:1.25;max-height:2.5em;overflow:hidden}.more{margin:12px auto 0;display:block;padding:12px 20px}.more[hidden]{display:none}.cs{margin:6px 0 10px}.dt{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:15;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px}.dt[hidden]{display:none}.dti{background:var(--bg);border-radius:12px;padding:12px;max-width:560px;width:100%;display:grid;gap:10px;margin-top:6vh}.xr{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.xp{border:0;padding:0;border-radius:6px;overflow:hidden;width:56px;height:56px;background:#fff;cursor:zoom-in}.xp img{width:100%;height:100%;object-fit:cover}</style></head><body>
 <header><div class="wrap"><h1>Dormakaba article finder</h1>
 <div class="sb"><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Type local no., import no. or description" aria-label="Search articles"><button id="pb" type="button" aria-label="Take a photo">📷 Take photo</button><button id="pu" type="button" aria-label="Upload a photo">🖼 Upload</button><button id="pw" type="button" aria-label="Browse all photos">🗂 Browse photos</button><button id="x" type="button">Clear</button><input id="pf" type="file" accept="image/*" capture="environment" hidden><input id="pg" type="file" accept="image/*" hidden></div>
 <p id="st" aria-live="polite"></p></div></header>
@@ -43,7 +43,7 @@ const R=D.map(r=>({r,k:[norm(r[2]),norm(r[3])],t:(r[1]+' '+r[0]).toLowerCase()})
 const q=document.getElementById('q'),out=document.getElementById('out'),st=document.getElementById('st'),lb=document.getElementById('lb');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function card(r,i){const im=r[4]>=0?`<button class="ph" data-i="${r[4]}" aria-label="Enlarge photo"><img loading="lazy" src="${IM[r[4]]}" alt="${esc(r[1])}"></button>`:`<div class="ph">No photo</div>`;
-return `<article class="c">${im}<div><span class="tag">${esc(r[0]||'Uncategorised')}</span><h2>${esc(r[1])}</h2><dl><dt>Import no.</dt><dd>${esc(r[2]||'–')}</dd><dt>Local no.</dt><dd>${esc(r[3]||'–')}</dd>${r[5]?`<dt>Remarks</dt><dd>${esc(r[5])}</dd>`:''}</dl></div></article>`}
+return `<article class="c">${im}<div><span class="tag">${esc(r[0]||'Uncategorised')}</span><h2>${esc(r[1])}</h2><dl><dt>Import no.</dt><dd>${esc(r[2]||'–')}</dd><dt>Local no.</dt><dd>${esc(r[3]||'–')}</dd>${r[5]?`<dt>Remarks</dt><dd>${esc(r[5])}</dd>`:''}</dl>${xrow(r)}</div></article>`}
 function run(){const v=q.value.trim();if(!v){out.innerHTML='<p class="empty">Type a local article number, an import article number or part of the description.</p>';st.textContent=D.length+' articles available';return}
 const n=norm(v),w=v.toLowerCase().split(/\s+/);
 let m=R.filter(o=>o.k.some(k=>k.includes(n))||w.every(x=>o.t.includes(x)));
@@ -97,12 +97,16 @@ async function lookAlike(canvas,say){
   say('Loading the image model…');
   if(!model)model=await mobilenet.load({version:2,alpha:1.0});
   const E=await getEmb(say);
+  const X=await getExtraEmb(say);
   say('Comparing with article photos…');
   const Q=views(canvas).map(embed);
-  const sc=E.map((e,i)=>[Math.max(...Q.map(v=>cosine(v,e))),i]).sort((a,b)=>b[0]-a[0]);
+  const cand=[];
+  E.forEach((e,i)=>cand.push({e,ii:i}));
+  X.forEach(x=>cand.push({e:x.e,key:x.k}));
+  const sc=cand.map(c=>[Math.max(...Q.map(v=>cosine(v,c.e))),c]).sort((a,b)=>b[0]-a[0]);
   const rows=[],seen=new Set();
-  for(const [,ii] of sc){
-    D.forEach((r,i)=>{if(r[4]===ii&&!seen.has(i)&&rows.length<60){seen.add(i);rows.push(r)}});
+  for(const [,c] of sc){
+    D.forEach((r,i)=>{if(!seen.has(i)&&rows.length<60&&(c.key!==undefined?keyOf(r)===c.key:r[4]===c.ii)){seen.add(i);rows.push(r)}});
     if(rows.length>=60)break;
   }
   return rows;
@@ -128,7 +132,7 @@ async function photoSearch(file){
   }catch(e){r2.innerHTML='<p class="note">Look-alike search did not work. Check your internet connection and try again.</p>';say('Finished with errors.')}
 }
 
-function tile(r){const i=D.indexOf(r);return `<button class="t" type="button" data-d="${i}">${r[4]>=0?`<img loading="lazy" src="${IM[r[4]]}" alt="${esc(r[1])}">`:'<div class="np">No photo</div>'}<b>${esc(r[2]||r[3]||'–')}</b><span>${esc(r[1])}</span></button>`}
+function tile(r){const i=D.indexOf(r);return `<button class="t" type="button" data-d="${i}">${mainSrc(r)?`<img loading="lazy" src="${mainSrc(r)}" alt="${esc(r[1])}">`:'<div class="np">No photo</div>'}<b>${esc(r[2]||r[3]||'–')}</b><span>${esc(r[1])}</span></button>`}
 function showGrid(box,rows,title,note){
   const cats=[...new Set(rows.map(r=>r[0]).filter(Boolean))].sort();let cat='',shown=0;const STEP=30;
   box.innerHTML=`<p class="sec">${esc(title)}</p><p class="note">${esc(note)}</p>${cats.length>1?`<select class="cs" aria-label="Filter by category"><option value="">All categories</option>${cats.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`:''}<div class="g"></div><button class="more" type="button">Show more</button>`;
@@ -140,7 +144,33 @@ const dt=document.getElementById('dt');
 function openDetail(i){dt.innerHTML='<div class="dti">'+card(D[i])+'<button id="dtc" type="button">Close</button></div>';dt.hidden=false;document.getElementById('dtc').onclick=()=>{dt.hidden=true}}
 document.addEventListener('click',e=>{const t=e.target.closest('.t[data-d]');if(t)openDetail(+t.dataset.d);const b=e.target.closest('#dt .ph[data-i]');if(b){lb.querySelector('img').src=IM[b.dataset.i];lb.classList.add('on')}});
 dt.onclick=e=>{if(e.target===dt)dt.hidden=true};
-document.getElementById('pw').onclick=()=>{q.value='';out.innerHTML='<div id="rb"></div>';showGrid(document.getElementById('rb'),D.filter(r=>r[4]>=0),'All article photos','Pick a category or scroll. Tap a picture to see its article numbers.');st.textContent='Photo gallery'};
+document.getElementById('pw').onclick=()=>{q.value='';out.innerHTML='<div id="rb"></div>';showGrid(document.getElementById('rb'),D.filter(r=>r[4]>=0||EXTRA[keyOf(r)]),'All article photos','Pick a category or scroll. Tap a picture to see its article numbers.');st.textContent='Photo gallery'};
+
+/* ===== Extra photos: files in the GitHub folder "extra" named <import no.>_2.jpg, _3.jpg ... are added automatically ===== */
+const REPO='samzion1998/Article-finder',EXTRA_DIR='extra';
+let EXTRA={},XE=null,XSIG='';
+const keyOf=r=>r[2]||('L'+r[3]);
+const extraUrl=f=>EXTRA_DIR+'/'+encodeURIComponent(f);
+const mainSrc=r=>r[4]>=0?IM[r[4]]:((EXTRA[keyOf(r)]||[])[0]?extraUrl(EXTRA[keyOf(r)][0]):'');
+function groupExtras(names){const o={};names.forEach(n=>{const m=n.match(/^(.+?)_(\d+)\.(jpe?g|png|webp)$/i);if(!m)return;(o[m[1]]=o[m[1]]||[]).push(n)});Object.keys(o).forEach(k=>o[k].sort());return o}
+function xrow(r){const e=EXTRA[keyOf(r)]||[];return e.length?'<div class="xr">'+e.map(f=>`<button class="xp" type="button" data-x="${esc(f)}" aria-label="Enlarge extra photo"><img loading="lazy" src="${extraUrl(f)}" alt="Extra photo of ${esc(r[1])}"></button>`).join('')+'</div>':''}
+async function loadExtras(){
+  try{const c=JSON.parse(localStorage.getItem('xl')||'null');if(c&&Date.now()-c.t<600000){EXTRA=groupExtras(c.n);return}}catch(e){}
+  try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+EXTRA_DIR);if(!r.ok)throw 0;const j=await r.json();const n=j.filter(x=>x.type==='file').map(x=>x.name);EXTRA=groupExtras(n);try{localStorage.setItem('xl',JSON.stringify({t:Date.now(),n}))}catch(e){}}catch(e){}
+}
+async function getExtraEmb(say){
+  const files=[];Object.keys(EXTRA).forEach(k=>EXTRA[k].forEach(f=>files.push([k,f])));
+  const sig=files.map(x=>x[1]).join('|');
+  if(XE&&XSIG===sig)return XE;
+  const o=[];
+  for(let i=0;i<files.length;i++){
+    try{const im=await loadImg(extraUrl(files[i][1]));o.push({k:files[i][0],e:embed(im)})}catch(e){}
+    if(i%5==0){say('Preparing your extra photos: '+i+' of '+files.length);await tf.nextFrame()}
+  }
+  XE=o;XSIG=sig;return o;
+}
+document.addEventListener('click',e=>{const x=e.target.closest('.xp[data-x]');if(x){lb.querySelector('img').src=extraUrl(x.dataset.x);lb.classList.add('on')}});
+loadExtras().then(()=>{if(Object.keys(EXTRA).length&&!document.querySelector('.pp,#rb'))run()});
 
 run();
 </script></body></html>
