@@ -100,8 +100,8 @@ async function lookAlike(canvas,say){
   const sc=E.map((e,i)=>[cosine(q,e),i]).sort((a,b)=>b[0]-a[0]);
   const rows=[],seen=new Set();
   for(const [,ii] of sc){
-    D.forEach((r,i)=>{if(r[4]===ii&&!seen.has(i)&&rows.length<5){seen.add(i);rows.push(r)}});
-    if(rows.length>=5)break;
+    D.forEach((r,i)=>{if(r[4]===ii&&!seen.has(i)&&rows.length<10){seen.add(i);rows.push(r)}});
+    if(rows.length>=10)break;
   }
   return rows;
 }
@@ -109,25 +109,17 @@ pb.onclick=()=>pf.click();
 pf.onchange=()=>{const f=pf.files[0];pf.value='';if(f)photoSearch(f)};
 async function photoSearch(file){
   const url=URL.createObjectURL(file);
-  out.innerHTML=`<div class="pp"><img src="${url}" alt="Your photo"><div><b>Photo search</b><p class="note" id="ps">Starting…</p><button id="pc" type="button">Close</button></div></div><div id="r1"></div><div id="r2"></div>`;
+  out.innerHTML=`<div class="pp"><img src="${url}" alt="Your photo"><div><b>Photo search</b><p class="note" id="ps">Starting…</p><button id="pc" type="button">Close</button></div></div><div id="r2"></div>`;
   document.getElementById('pc').onclick=()=>{q.value='';run()};
-  const ps=document.getElementById('ps'),r1=document.getElementById('r1'),r2=document.getElementById('r2');
+  const ps=document.getElementById('ps'),r2=document.getElementById('r2');
   const say=t=>{ps.textContent=t};
   st.textContent='Photo search';
   let canvas;
   try{canvas=toCanvas(await loadImg(url),1100)}catch(e){say('Could not open this photo. Please try another one.');return}
-  // 1) label text
-  try{
-    say('Reading text on the photo…');
-    await loadScript(CDN.ocr);
-    const {data}=await Tesseract.recognize(canvas,'eng');
-    const {res,toks}=matchText(data.text||'');
-    r1.innerHTML='<p class="sec">Found from the label text</p>'+(res.length?res.map(x=>card(x.r)).join(''):`<p class="note">No article number found in the text.${toks.length?' Text read: '+esc(toks.slice(0,12).join(' ')):''}</p>`);
-  }catch(e){r1.innerHTML='<p class="note">Could not read label text. Check your internet connection and try again.</p>'}
   // 2) look-alike
   try{
     const rows=await lookAlike(canvas,say);
-    r2.innerHTML='<p class="sec">Closest looking articles</p><p class="note">Best guess from the picture. Check the photo before you use the number.</p>'+rows.map(card).join('');
+    r2.innerHTML='<p class="sec">Articles with similar images (best match first)</p><p class="note">Compare your photo with these pictures, then use the import and local numbers shown.</p>'+rows.map(card).join('');
     say('Done. Check the results below.');
   }catch(e){r2.innerHTML='<p class="note">Look-alike search did not work. Check your internet connection and try again.</p>';say('Finished with errors.')}
 }
