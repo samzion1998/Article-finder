@@ -29,9 +29,9 @@ dt{color:var(--mute)}dd{margin:0;font-weight:600;word-break:break-all}
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
 #lb.on{display:flex}#lb img{max-width:100%;max-height:100%;background:#fff;border-radius:8px}
 @media (max-width:480px){.c{grid-template-columns:96px 1fr}.ph{width:96px;height:96px}}
-</style></head><body>
+.pp{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.pp img{width:96px;height:96px;object-fit:cover;border-radius:8px}.sec{margin:10px 0 0;font-weight:700}.note{color:var(--mute);font-size:.88rem;margin:4px 0}#r1,#r2{display:grid;gap:12px}.sb button{white-space:nowrap}</style></head><body>
 <header><div class="wrap"><h1>Dormakaba article finder</h1>
-<div class="sb"><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Type local no., import no. or description" aria-label="Search articles"><button id="x" type="button">Clear</button></div>
+<div class="sb"><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Type local no., import no. or description" aria-label="Search articles"><button id="pb" type="button" aria-label="Search by photo">📷 Photo</button><button id="x" type="button">Clear</button><input id="pf" type="file" accept="image/*" capture="environment" hidden></div>
 <p id="st" aria-live="polite"></p></div></header>
 <main id="out"></main>
 <div id="lb" role="dialog" aria-label="Photo"><img alt=""></div>
@@ -52,5 +52,85 @@ out.innerHTML=m.length?m.slice(0,40).map(o=>card(o.r)).join(''):'<p class="empty
 q.addEventListener('input',run);document.getElementById('x').onclick=()=>{q.value='';run();q.focus()};
 out.addEventListener('click',e=>{const b=e.target.closest('.ph[data-i]');if(b){lb.querySelector('img').src=IM[b.dataset.i];lb.classList.add('on')}});
 lb.onclick=()=>lb.classList.remove('on');addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on')});
+/* ===== Search by photo: reads label text + finds look-alike article photos ===== */
+const pb=document.getElementById('pb'),pf=document.getElementById('pf');
+const CDN={ocr:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',tf:'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js',mn:'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js'};
+const loaded={};
+function loadScript(src){return loaded[src]||(loaded[src]=new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>{delete loaded[src];no(new Error('Could not load '+src))};document.head.appendChild(s)}))}
+function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('image'));i.src=src})}
+function toCanvas(img,max){const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}
+/* find articles whose import / local number appears in the text read from the photo */
+function matchText(text){
+  const toks=(text.match(/[A-Za-z0-9][A-Za-z0-9._\-\/]{3,}/g)||[]);
+  const seen=new Set(),res=[];
+  const add=(i,why)=>{if(!seen.has(i)){seen.add(i);res.push({r:D[i],why})}};
+  toks.forEach(t=>{const n=norm(t);if(n.length<5)return;
+    R.forEach((o,i)=>{if(o.k[0]===n||o.k[1]===n)add(i,'exact')})});
+  if(!res.length){ // looser: label text contains a whole article number
+    const all=norm(text);
+    R.forEach((o,i)=>{if((o.k[0].length>=7&&all.includes(o.k[0]))||(o.k[1].length>=7&&all.includes(o.k[1])))add(i,'in text')})}
+  return {res:res.slice(0,8),toks};
+}
+/* ---- look-alike search with image embeddings (cached in the browser after the first run) ---- */
+let model=null,EMB=null;
+const idbKey='emb-v1-'+IM.length;
+function idb(){return new Promise((ok,no)=>{const r=indexedDB.open('article-finder',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function idbGet(k){try{const d=await idb();return await new Promise(ok=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)})}catch(e){return null}}
+async function idbSet(k,v){try{const d=await idb();d.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}
+function embed(el){return tf.tidy(()=>{const e=model.infer(el,true);const n=e.div(e.norm());return Array.from(n.dataSync())})}
+async function getEmb(say){
+  if(EMB)return EMB;
+  const c=await idbGet(idbKey);
+  if(c&&c.length===IM.length){EMB=c;return EMB}
+  const arr=[];
+  for(let i=0;i<IM.length;i++){
+    const im=await loadImg(IM[i]);arr.push(embed(im));
+    if(i%20==0){say('Preparing article photos for the first time: '+i+' of '+IM.length+'. Please keep this page open.');await tf.nextFrame()}
+  }
+  EMB=arr;idbSet(idbKey,arr);return EMB;
+}
+const cosine=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s};
+async function lookAlike(canvas,say){
+  await loadScript(CDN.tf);await loadScript(CDN.mn);
+  say('Loading the image model…');
+  if(!model)model=await mobilenet.load({version:2,alpha:1.0});
+  const E=await getEmb(say);
+  say('Comparing with article photos…');
+  const q=embed(canvas);
+  const sc=E.map((e,i)=>[cosine(q,e),i]).sort((a,b)=>b[0]-a[0]);
+  const rows=[],seen=new Set();
+  for(const [,ii] of sc){
+    D.forEach((r,i)=>{if(r[4]===ii&&!seen.has(i)&&rows.length<5){seen.add(i);rows.push(r)}});
+    if(rows.length>=5)break;
+  }
+  return rows;
+}
+pb.onclick=()=>pf.click();
+pf.onchange=()=>{const f=pf.files[0];pf.value='';if(f)photoSearch(f)};
+async function photoSearch(file){
+  const url=URL.createObjectURL(file);
+  out.innerHTML=`<div class="pp"><img src="${url}" alt="Your photo"><div><b>Photo search</b><p class="note" id="ps">Starting…</p><button id="pc" type="button">Close</button></div></div><div id="r1"></div><div id="r2"></div>`;
+  document.getElementById('pc').onclick=()=>{q.value='';run()};
+  const ps=document.getElementById('ps'),r1=document.getElementById('r1'),r2=document.getElementById('r2');
+  const say=t=>{ps.textContent=t};
+  st.textContent='Photo search';
+  let canvas;
+  try{canvas=toCanvas(await loadImg(url),1100)}catch(e){say('Could not open this photo. Please try another one.');return}
+  // 1) label text
+  try{
+    say('Reading text on the photo…');
+    await loadScript(CDN.ocr);
+    const {data}=await Tesseract.recognize(canvas,'eng');
+    const {res,toks}=matchText(data.text||'');
+    r1.innerHTML='<p class="sec">Found from the label text</p>'+(res.length?res.map(x=>card(x.r)).join(''):`<p class="note">No article number found in the text.${toks.length?' Text read: '+esc(toks.slice(0,12).join(' ')):''}</p>`);
+  }catch(e){r1.innerHTML='<p class="note">Could not read label text. Check your internet connection and try again.</p>'}
+  // 2) look-alike
+  try{
+    const rows=await lookAlike(canvas,say);
+    r2.innerHTML='<p class="sec">Closest looking articles</p><p class="note">Best guess from the picture. Check the photo before you use the number.</p>'+rows.map(card).join('');
+    say('Done. Check the results below.');
+  }catch(e){r2.innerHTML='<p class="note">Look-alike search did not work. Check your internet connection and try again.</p>';say('Finished with errors.')}
+}
+
 run();
 </script></body></html>
