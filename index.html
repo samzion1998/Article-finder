@@ -29,9 +29,9 @@ dt{color:var(--mute)}dd{margin:0;font-weight:600;word-break:break-all}
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
 #lb.on{display:flex}#lb img{max-width:100%;max-height:100%;background:#fff;border-radius:8px}
 @media (max-width:480px){.c{grid-template-columns:96px 1fr}.ph{width:96px;height:96px}}
-.pp{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.pp img{width:96px;height:96px;object-fit:cover;border-radius:8px}.sec{margin:10px 0 0;font-weight:700}.note{color:var(--mute);font-size:.88rem;margin:4px 0}#r1,#r2{display:grid;gap:12px}.sb button{white-space:nowrap}</style></head><body>
+.pp{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.pp img{width:96px;height:96px;object-fit:cover;border-radius:8px}.sec{margin:10px 0 0;font-weight:700}.note{color:var(--mute);font-size:.88rem;margin:4px 0}#r1,#r2{display:grid;gap:12px}.sb button{white-space:nowrap;min-height:44px}.sb{flex-wrap:wrap}.sb #q{flex:1 1 220px}</style></head><body>
 <header><div class="wrap"><h1>Dormakaba article finder</h1>
-<div class="sb"><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Type local no., import no. or description" aria-label="Search articles"><button id="pb" type="button" aria-label="Search by photo">📷 Photo</button><button id="x" type="button">Clear</button><input id="pf" type="file" accept="image/*" capture="environment" hidden></div>
+<div class="sb"><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Type local no., import no. or description" aria-label="Search articles"><button id="pb" type="button" aria-label="Take a photo">📷 Take photo</button><button id="pu" type="button" aria-label="Upload a photo">🖼 Upload</button><button id="x" type="button">Clear</button><input id="pf" type="file" accept="image/*" capture="environment" hidden><input id="pg" type="file" accept="image/*" hidden></div>
 <p id="st" aria-live="polite"></p></div></header>
 <main id="out"></main>
 <div id="lb" role="dialog" aria-label="Photo"><img alt=""></div>
@@ -89,6 +89,7 @@ async function getEmb(say){
   }
   EMB=arr;idbSet(idbKey,arr);return EMB;
 }
+function views(c){const o=[c];const mk=(f,flip)=>{const w=Math.round(c.width*f),h=Math.round(c.height*f),k=document.createElement('canvas');k.width=w;k.height=h;const x=k.getContext('2d');if(flip){x.translate(w,0);x.scale(-1,1)}x.drawImage(c,(c.width-w)/2,(c.height-h)/2,w,h,0,0,w,h);return k};o.push(mk(.75),mk(.55),mk(1,true));return o}
 const cosine=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s};
 async function lookAlike(canvas,say){
   await loadScript(CDN.tf);await loadScript(CDN.mn);
@@ -96,8 +97,8 @@ async function lookAlike(canvas,say){
   if(!model)model=await mobilenet.load({version:2,alpha:1.0});
   const E=await getEmb(say);
   say('Comparing with article photos…');
-  const q=embed(canvas);
-  const sc=E.map((e,i)=>[cosine(q,e),i]).sort((a,b)=>b[0]-a[0]);
+  const Q=views(canvas).map(embed);
+  const sc=E.map((e,i)=>[Math.max(...Q.map(v=>cosine(v,e))),i]).sort((a,b)=>b[0]-a[0]);
   const rows=[],seen=new Set();
   for(const [,ii] of sc){
     D.forEach((r,i)=>{if(r[4]===ii&&!seen.has(i)&&rows.length<10){seen.add(i);rows.push(r)}});
@@ -105,8 +106,10 @@ async function lookAlike(canvas,say){
   }
   return rows;
 }
-pb.onclick=()=>pf.click();
+const pu=document.getElementById('pu'),pg=document.getElementById('pg');
+pb.onclick=()=>pf.click();pu.onclick=()=>pg.click();
 pf.onchange=()=>{const f=pf.files[0];pf.value='';if(f)photoSearch(f)};
+pg.onchange=()=>{const f=pg.files[0];pg.value='';if(f)photoSearch(f)};
 async function photoSearch(file){
   const url=URL.createObjectURL(file);
   out.innerHTML=`<div class="pp"><img src="${url}" alt="Your photo"><div><b>Photo search</b><p class="note" id="ps">Starting…</p><button id="pc" type="button">Close</button></div></div><div id="r2"></div>`;
